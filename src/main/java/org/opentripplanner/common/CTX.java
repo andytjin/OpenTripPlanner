@@ -21,7 +21,7 @@ import java.util.HashMap;
  * 
  * @author skywave
  */
-public class CTX {
+public class CTX { 
 
     public ArrayList<HashMap<String, String>> rows = new ArrayList<HashMap<String, String>>();
 
