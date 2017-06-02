@@ -143,7 +143,8 @@ public class Broker implements Runnable {
 
     private Timer timer = new Timer();
 
-    private String workerName, project;
+    private String workerName;
+    private String project;
 
     /**
      * keep track of which graphs we have launched workers on and how long ago we launched them,
@@ -174,7 +175,7 @@ public class Broker implements Runnable {
         }
 
         workerConfig.setProperty("broker-address", addr);
-        workerConfig.setProperty("broker-port", "" + port);
+        workerConfig.setProperty("broker-port", Integer.toString(port));
 
         if (brokerConfig.getProperty("statistics-queue") != null)
             workerConfig.setProperty("statistics-queue", brokerConfig.getProperty("statistics-queue"));
@@ -476,22 +477,9 @@ public class Broker implements Runnable {
     public synchronized void deliverTasks() throws InterruptedException {
 
         // Wait until there are some undelivered tasks.
-        while (nUndeliveredTasks == 0) {
-            LOG.debug("Task delivery thread is going to sleep, there are no tasks waiting for delivery.");
-            logQueueStatus();
-            wait();
-            redeliver();
-        }
-        LOG.debug("Task delivery thread is awake and there are some undelivered tasks.");
-        logQueueStatus();
+        waitForUndeliveredTasks();
 
-        while (nWaitingConsumers == 0) {
-            LOG.debug("Task delivery thread is going to sleep, there are no consumers waiting.");
-            // Thread will be notified when there are new incoming consumer connections.
-            wait();
-        }
-
-        LOG.debug("Task delivery thread awake; consumers are waiting and tasks are available");
+        checkForWaitingConsumers();
 
         // Loop over all jobs and send them to consumers
         // This makes for an as-fair-as-possible allocation: jobs are fairly allocated between
@@ -525,12 +513,7 @@ public class Broker implements Runnable {
                 Response consumer = consumers.pop();
 
                 // package tasks into a job
-                Job job = new Job("HIGH PRIORITY");
-                job.graphId = graphId;
-                for (int i = 0; i < MAX_TASKS_PER_WORKER && taskIt.hasNext(); i++) {
-                    job.addTask(taskIt.next());
-                    taskIt.remove();
-                }
+                Job job = packageTasksIntoJobs(graphId, taskIt);
 
                 // TODO inefficiency here: we should mix single point and multipoint in the same response
                 deliver(job, consumer);
@@ -557,14 +540,16 @@ public class Broker implements Runnable {
             }
 
             // nothing to see here
-            if (current == null) break;
+            if (current == null)
+                break;
 
             Deque<Response> consumers;
             if (!workOffline)
                 consumers = consumersByGraph.get(current.graphId);
             else {
                 Optional<Deque<Response>> opt = consumersByGraph.values().stream().filter(c -> !c.isEmpty()).findFirst();
-                if (opt.isPresent()) consumers = opt.get();
+                if (opt.isPresent())
+                    consumers = opt.get();
                 else consumers = null;
             }
             // deliver this job to only one consumer
@@ -577,6 +562,36 @@ public class Broker implements Runnable {
 
         // we've delivered everything we can, prevent anything else from happening until something changes
         wait();
+    }
+
+    private Job packageTasksIntoJobs(String graphId, Iterator<AnalystClusterRequest> taskIt) {
+        Job job = new Job("HIGH PRIORITY");
+        job.graphId = graphId;
+        for (int i = 0; i < MAX_TASKS_PER_WORKER && taskIt.hasNext(); i++) {
+            job.addTask(taskIt.next());
+            taskIt.remove();
+        }
+        return job;
+    }
+
+    private void checkForWaitingConsumers() throws InterruptedException {
+        while (nWaitingConsumers == 0) {
+            LOG.debug("Task delivery thread is going to sleep, there are no consumers waiting.");
+            // Thread will be notified when there are new incoming consumer connections.
+            wait();
+            LOG.debug("Task delivery thread awake; consumers are waiting and tasks are available");
+        }
+    }
+
+    private void waitForUndeliveredTasks() throws InterruptedException {
+        while (nUndeliveredTasks == 0) {
+            LOG.debug("Task delivery thread is going to sleep, there are no tasks waiting for delivery.");
+            logQueueStatus();
+            wait();
+            redeliver();
+        }
+        LOG.debug("Task delivery thread is awake and there are some undelivered tasks.");
+        logQueueStatus();
     }
 
     /**
@@ -677,6 +692,7 @@ public class Broker implements Runnable {
                 LOG.info("Task pump thread was interrupted.");
                 return;
             }
+            return;
         }
     }
 
