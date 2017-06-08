@@ -15,10 +15,7 @@ package org.opentripplanner.analyst.core;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.IndexColorModel;
-import java.awt.image.WritableRaster;
+import java.awt.image.*;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
@@ -271,7 +268,9 @@ public abstract class Tile {
     public BufferedImage generateImage(TimeSurface surf, RenderRequest renderRequest) {
         long t0 = System.currentTimeMillis();
         BufferedImage image = getEmptyImage(renderRequest.style);
-        byte[] imagePixelData = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
+        Raster raster = image.getRaster();
+        DataBuffer dataBuffer = raster.getDataBuffer();
+        byte[] imagePixelData = ((DataBufferByte)dataBuffer).getData();
         int i = 0;
         for (Sample s : getSamples()) {
             byte pixel;
@@ -308,7 +307,9 @@ public abstract class Tile {
             double intercept, RenderRequest renderRequest) {
         long t0 = System.currentTimeMillis();
         BufferedImage image = getEmptyImage(renderRequest.style);
-        byte[] imagePixelData = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
+        Raster raster = image.getRaster();
+        DataBuffer dataBuffer = raster.getDataBuffer();
+        byte[] imagePixelData = ((DataBufferByte)dataBuffer).getData();
         int i = 0;
         for (Sample s : getSamples()) {
             byte pixel = UNREACHABLE;
