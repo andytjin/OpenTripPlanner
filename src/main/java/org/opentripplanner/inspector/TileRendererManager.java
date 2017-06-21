@@ -21,8 +21,8 @@ import org.geotools.geometry.Envelope2D;
 import org.opentripplanner.analyst.request.TileRequest;
 import org.opentripplanner.api.resource.GraphInspectorTileResource;
 import org.opentripplanner.inspector.TileRenderer.TileRenderContext;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.services.GraphService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +52,10 @@ public class TileRendererManager {
         this.graph = graph;
 
         // Register layers.
-        renderers.put("bike-safety", new EdgeVertexTileRenderer(new BikeSafetyEdgeRenderer()));
-        renderers.put("traversal", new EdgeVertexTileRenderer(
+        renderers.put("bike-safety", new TileRendererImpl(new BikeSafetyEdgeRenderer()));
+        renderers.put("traversal", new TileRendererImpl(
                 new TraversalPermissionsEdgeRenderer()));
-        renderers.put("wheelchair", new EdgeVertexTileRenderer(new WheelchairEdgeRenderer()));
+        renderers.put("wheelchair", new TileRendererImpl(new WheelchairEdgeRenderer()));
     }
 
     public void registerRenderer(String layer, TileRenderer tileRenderer) {

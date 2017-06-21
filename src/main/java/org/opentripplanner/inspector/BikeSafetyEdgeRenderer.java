@@ -15,9 +15,9 @@ package org.opentripplanner.inspector;
 
 import java.awt.Color;
 
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.EdgeVertexRenderer;
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.EdgeVisualAttributes;
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.VertexVisualAttributes;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl.EdgeVisualAttributes;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl.VertexVisualAttributes;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.StreetBikeRentalLink;
@@ -32,7 +32,7 @@ import org.opentripplanner.routing.vertextype.IntersectionVertex;
  * @author laurent
  * 
  */
-public class BikeSafetyEdgeRenderer implements EdgeVertexRenderer {
+public class BikeSafetyEdgeRenderer implements TileRendererImpl.GraphRenderer {
 
     private ScalarColorPalette palette = new DefaultScalarColorPalette(1.0, 3.0, 10.0);
 

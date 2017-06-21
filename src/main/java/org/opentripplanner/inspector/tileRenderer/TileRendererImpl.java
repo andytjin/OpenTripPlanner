@@ -11,7 +11,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-package org.opentripplanner.inspector;
+package org.opentripplanner.inspector.tileRenderer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -27,6 +27,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.inspector.TileRenderer;
+import org.opentripplanner.inspector.tileRenderer.graphRenderer.EdgeVisualAttributes;
+import org.opentripplanner.inspector.tileRenderer.graphRenderer.GraphRenderer;
+import org.opentripplanner.inspector.tileRenderer.graphRenderer.VertexVisualAttributes;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
 
@@ -47,58 +51,20 @@ import com.vividsolutions.jts.operation.buffer.OffsetCurveBuilder;
 
 /**
  * A TileRenderer implementation which get all edges/vertex in the bounding box of the tile, and
- * call a EdgeVertexRenderer for getting rendering attributes of each (color, string label...).
+ * call a GraphRenderer for getting rendering attributes of each (color, string label...).
  * 
  * @author laurent
  */
-public class EdgeVertexTileRenderer implements TileRenderer {
-
-    public class EdgeVisualAttributes {
-
-        public Color color;
-
-        public String label;
-    }
-
-    public class VertexVisualAttributes {
-
-        public Color color;
-
-        public String label;
-    }
-
-    public interface EdgeVertexRenderer {
-
-        /**
-         * @param e The edge being rendered.
-         * @param attrs The edge visual attributes to fill-in.
-         * @return True to render this edge, false otherwise.
-         */
-        public abstract boolean renderEdge(Edge e, EdgeVisualAttributes attrs);
-
-        /**
-         * @param v The vertex being rendered.
-         * @param attrs The vertex visual attributes to fill-in.
-         * @return True to render this vertex, false otherwise.
-         */
-        public abstract boolean renderVertex(Vertex v, VertexVisualAttributes attrs);
-
-        /**
-         * Name of this tile Render which would be shown in frontend
-         *
-         * @return Name of tile render
-         */
-        public abstract String getName();
-    }
+public class TileRendererImpl implements TileRenderer {
 
     @Override
     public int getColorModel() {
         return BufferedImage.TYPE_INT_ARGB;
     }
 
-    private EdgeVertexRenderer evRenderer;
+    private GraphRenderer evRenderer;
 
-    public EdgeVertexTileRenderer(EdgeVertexRenderer evRenderer) {
+    public TileRendererImpl(GraphRenderer evRenderer) {
         this.evRenderer = evRenderer;
     }
 

@@ -1,6 +1,7 @@
 package org.opentripplanner.inspector;
 
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.EdgeVertexRenderer;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl.GraphRenderer;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
@@ -13,7 +14,7 @@ import java.awt.Color;
  *
  * @author hannesj
  */
-public class WheelchairEdgeRenderer implements EdgeVertexRenderer {
+public class WheelchairEdgeRenderer implements GraphRenderer {
 
 
     private ScalarColorPalette slopePalette = new DefaultScalarColorPalette(0.0, 0.08, 1.0);
@@ -28,7 +29,7 @@ public class WheelchairEdgeRenderer implements EdgeVertexRenderer {
     }
 
     @Override
-    public boolean renderEdge(Edge e, EdgeVertexTileRenderer.EdgeVisualAttributes attrs) {
+    public boolean renderEdge(Edge e, TileRendererImpl.EdgeVisualAttributes attrs) {
         if (e instanceof StreetEdge) {
             StreetEdge pse = (StreetEdge) e;
             if (!pse.isWheelchairAccessible()) {
@@ -45,7 +46,7 @@ public class WheelchairEdgeRenderer implements EdgeVertexRenderer {
     }
 
     @Override
-    public boolean renderVertex(Vertex v, EdgeVertexTileRenderer.VertexVisualAttributes attrs) {
+    public boolean renderVertex(Vertex v, TileRendererImpl.VertexVisualAttributes attrs) {
         if (v instanceof TransitVertex) {
             if(((TransitVertex) v).getStop().getWheelchairBoarding() == 0)
                 attrs.color = NO_WHEELCHAIR_INFORMATION_COLOR;

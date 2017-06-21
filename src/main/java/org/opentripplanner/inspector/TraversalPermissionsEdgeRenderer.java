@@ -15,9 +15,9 @@ package org.opentripplanner.inspector;
 
 import java.awt.Color;
 
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.EdgeVertexRenderer;
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.EdgeVisualAttributes;
-import org.opentripplanner.inspector.EdgeVertexTileRenderer.VertexVisualAttributes;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl.EdgeVisualAttributes;
+import org.opentripplanner.inspector.tileRenderer.TileRendererImpl.VertexVisualAttributes;
 import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.graph.Edge;
@@ -29,7 +29,7 @@ import org.opentripplanner.routing.vertextype.*;
  * 
  * @author laurent
  */
-public class TraversalPermissionsEdgeRenderer implements EdgeVertexRenderer {
+public class TraversalPermissionsEdgeRenderer implements TileRendererImpl.GraphRenderer {
 
     private static final Color LINK_COLOR_EDGE = Color.ORANGE;
 

@@ -59,7 +59,7 @@ public interface TileRenderer {
     public abstract int getColorModel();
 
     /** Implementation of the tile rendering */
-    public abstract void renderTile(TileRenderContext context);
+    public abstract void renderTile();
 
     /** Gets descriptive name of this Tile Render */
     public abstract String getName();
