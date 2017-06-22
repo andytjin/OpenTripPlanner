@@ -442,6 +442,7 @@ public class AnalystWorker implements Runnable {
                 // could consume it in the same way.
                 objectMapper.writeValue(gzipOutputStream, envelope);
                 gzipOutputStream.close();
+                inPipe.close();
                 // Tell the broker the task has been handled and should not be re-delivered to another worker.
                 deleteRequest(clusterRequest);
             } else {
