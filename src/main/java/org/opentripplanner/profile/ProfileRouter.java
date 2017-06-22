@@ -63,13 +63,9 @@ public class ProfileRouter {
     public final Graph graph;
     public final ProfileRequest request;
 
-    public ProfileRouter(Graph graph, ProfileRequest request) {
-        this.graph = graph;
-        this.request = request;
-    }
-
     /* Search state */
-    Multimap<StopCluster, StopAtDistance> fromStopPaths, toStopPaths; // ways to reach each origin or dest stop cluster
+    Multimap<StopCluster, StopAtDistance> fromStopPaths;
+    Multimap<StopCluster, StopAtDistance> toStopPaths; // ways to reach each origin or dest stop cluster
     List<RoutingContext> routingContexts = Lists.newArrayList();
 
     /* Analyst: time bounds for each vertex. This field contains the output after the search is run. */
@@ -83,6 +79,11 @@ public class ProfileRouter {
     // TODO rename fromStopsByPattern
     Multimap<TripPattern, StopAtDistance> fromStops, toStops;
     TimeWindow window; // filters trips used by time of day and service schedule
+
+    public ProfileRouter(Graph graph, ProfileRequest request) {
+        this.graph = graph;
+        this.request = request;
+    }
 
     /** @return true if the given stop cluster has at least one transfer coming from the given pattern. */
     private boolean hasTransfers(StopCluster stopCluster, TripPattern pattern) {

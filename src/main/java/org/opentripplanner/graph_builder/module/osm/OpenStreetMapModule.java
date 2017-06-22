@@ -552,14 +552,8 @@ public class OpenStreetMapModule implements GraphBuilderModule {
                         continue WAY;
                     boolean levelsDiffer = false;
                     String level = node.getTag("level");
-                    if (lastLevel == null) {
-                        if (level != null) {
+                    if ((lastLevel == null && level != null) || !lastLevel.equals(level )) {
                             levelsDiffer = true;
-                        }
-                    } else {
-                        if (!lastLevel.equals(level)) {
-                            levelsDiffer = true;
-                        }
                     }
                     if (nodeId != last
                             && (node.lat != lastLat || node.lon != lastLon || levelsDiffer))
