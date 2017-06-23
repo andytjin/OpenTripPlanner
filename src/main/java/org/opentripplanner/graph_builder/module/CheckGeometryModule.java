@@ -56,37 +56,41 @@ public class CheckGeometryModule implements GraphBuilderModule {
 
     @Override
     public void buildGraph(Graph graph, HashMap<Class<?>, Object> extra) {
-        for (Vertex gv : graph.getVertices()) {
-            if (Double.isNaN(gv.getCoordinate().x) || Double.isNaN(gv.getCoordinate().y)) {
-                LOG.warn("Vertex " + gv + " has NaN location; this will cause doom.");
-                LOG.warn(graph.addBuilderAnnotation(new BogusVertexGeometry(gv)));
+        for (Vertex vertex : graph.getVertices()) {
+            if (Double.isNaN(vertex.getCoordinate().x) || Double.isNaN(vertex.getCoordinate().y)) {
+                LOG.warn("Vertex " + vertex + " has NaN location; this will cause doom.");
+                LOG.warn(graph.addBuilderAnnotation(new BogusVertexGeometry(vertex)));
             }
             
             // TODO: This was filtered to EdgeNarratives before EdgeNarrative removal
-            for (Edge e : gv.getOutgoing()) {
-                Geometry g = e.getGeometry();
-                if (g == null) {
+            for (Edge edge : vertex.getOutgoing()) {
+                Geometry geometry = edge.getGeometry();
+                if (geometry == null) {
                     continue;
                 }
-                for (Coordinate c : g.getCoordinates()) {
-                    if (Double.isNaN(c.x) || Double.isNaN(c.y)) {
-                        LOG.warn(graph.addBuilderAnnotation(new BogusEdgeGeometry(e)));
+                for (Coordinate coordinate : geometry.getCoordinates()) {
+                    if (Double.isNaN(coordinate.x) || Double.isNaN(coordinate.y)) {
+                        LOG.warn(graph.addBuilderAnnotation(new BogusEdgeGeometry(edge)));
                     }
                 }
-                if (e instanceof HopEdge) {
-                    Coordinate edgeStartCoord = e.getFromVertex().getCoordinate();
-                    Coordinate edgeEndCoord = e.getToVertex().getCoordinate();
-                    Coordinate[] geometryCoordinates = g.getCoordinates();
+                if (edge instanceof HopEdge) {
+                    Vertex fromVertex = edge.getFromVertex();
+                    Coordinate edgeStartCoord = fromVertex.getCoordinate();
+
+                    Vertex toVertex = edge.getToVertex();
+                    Coordinate edgeEndCoord = toVertex.getCoordinate();
+                    
+                    Coordinate[] geometryCoordinates = geometry.getCoordinates();
                     if (geometryCoordinates.length < 2) {
-                        LOG.warn(graph.addBuilderAnnotation(new BogusEdgeGeometry(e)));
+                        LOG.warn(graph.addBuilderAnnotation(new BogusEdgeGeometry(edge)));
                         continue;
                     }
                     Coordinate geometryStartCoord = geometryCoordinates[0];
                     Coordinate geometryEndCoord = geometryCoordinates[geometryCoordinates.length - 1];
                     if (SphericalDistanceLibrary.distance(edgeStartCoord, geometryStartCoord) > MAX_VERTEX_SHAPE_ERROR) {
-                        LOG.warn(graph.addBuilderAnnotation(new VertexShapeError(e)));
+                        LOG.warn(graph.addBuilderAnnotation(new VertexShapeError(edge)));
                     } else if (SphericalDistanceLibrary.distance(edgeEndCoord, geometryEndCoord) > MAX_VERTEX_SHAPE_ERROR) {
-                        LOG.warn(graph.addBuilderAnnotation(new VertexShapeError(e)));
+                        LOG.warn(graph.addBuilderAnnotation(new VertexShapeError(edge)));
                     }
                 }
             }
