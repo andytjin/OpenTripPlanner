@@ -52,82 +52,58 @@ import com.vividsolutions.jts.operation.buffer.OffsetCurveBuilder;
 /**
  * A TileRenderer implementation which get all edges/vertex in the bounding box of the tile, and
  * call a GraphRenderer for getting rendering attributes of each (color, string label...).
- * 
+ *
  * @author laurent
  */
 public class TileRendererImpl implements TileRenderer {
 
-    @Override
-    public int getColorModel() {
-        return BufferedImage.TYPE_INT_ARGB;
-    }
-
     private GraphRenderer evRenderer;
+    private TileRenderContext context;
+    private Envelope bbox;
+    private float lineWidth;
+    private Collection<Vertex> vertices;
+    private Set<Edge> edgesSet;
+    private ShapeWriter shapeWriter = new ShapeWriter(new IdentityPointTransformation(),
+            new PointShapeFactory.Point());
+    private GeometryFactory geomFactory = new GeometryFactory();
 
-    public TileRendererImpl(GraphRenderer evRenderer) {
+    public TileRendererImpl(GraphRenderer evRenderer, TileRenderContext context) {
         this.evRenderer = evRenderer;
+        this.context = context;
     }
 
     @Override
-    public String getName() {
-        return evRenderer.getName();
+    public void renderTile() {
+        initializeConfig();
+        renderEdges();
+        renderVertices();
     }
 
-    @Override
-    public void renderTile(TileRenderContext context) {
+    private void initializeConfig() {
+        setLineWidth();
+        setMarginsToBbox();
+        setVertices();
+        setEdgesSet();
+        addInComingOutgoingToVertices();
+    }
 
-        float lineWidth = (float) (1.0f + 3.0f / Math.sqrt(context.metersPerPixel));
+    private void renderEdges() {
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(lineWidth));
 
-        // Grow a bit the envelope to prevent rendering glitches between tiles
-        Envelope bboxWithMargins = context.expandPixels(lineWidth * 2.0, lineWidth * 2.0);
-
-        Collection<Vertex> vertices = context.graph.streetIndex
-                .getVerticesForEnvelope(bboxWithMargins);
-        Collection<Edge> edges = context.graph.streetIndex.getEdgesForEnvelope(bboxWithMargins);
-        Set<Edge> edgesSet = new HashSet<>(edges);
-
-        /*
-         * Some edges do not have geometry and thus do not get spatial-indexed. Add
-         * outgoing/incoming edges of all vertices. This is not perfect, as if the edge cross a tile
-         * it will not be rendered on it.
-         */
-        for (Vertex vertex : vertices) {
-            edgesSet.addAll(vertex.getIncoming());
-            edgesSet.addAll(vertex.getOutgoing());
-        }
-
-        // Note: we do not use the transform inside the shapeWriter, but do it ourselves
-        // since it's easier for the offset to work in pixel size.
-        ShapeWriter shapeWriter = new ShapeWriter(new IdentityPointTransformation(),
-                new PointShapeFactory.Point());
-        GeometryFactory geomFactory = new GeometryFactory();
-
-        Stroke stroke = new BasicStroke(lineWidth * 1.4f, BasicStroke.CAP_ROUND,
-                BasicStroke.JOIN_BEVEL);
         Stroke halfStroke = new BasicStroke(lineWidth * 0.6f + 1.0f, BasicStroke.CAP_ROUND,
                 BasicStroke.JOIN_BEVEL);
         Stroke halfDashedStroke = new BasicStroke(lineWidth * 0.6f + 1.0f, BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_BEVEL, 1.0f, new float[] { 4 * lineWidth, lineWidth },
+                BasicStroke.JOIN_BEVEL, 1.0f, new float[]{4 * lineWidth, lineWidth},
                 2 * lineWidth);
-        Stroke arrowStroke = new ShapeStroke(new Polygon(new int[] { 0, 0, 30 }, new int[] { 0, 20,
-                10 }, 3), lineWidth / 2, 5.0f * lineWidth, 2.5f * lineWidth);
+        Stroke arrowStroke = new ShapeStroke(new Polygon(new int[]{0, 0, 30}, new int[]{0, 20,
+                10}, 3), lineWidth / 2, 5.0f * lineWidth, 2.5f * lineWidth);
         BasicStroke thinStroke = new BasicStroke(1.0f, BasicStroke.CAP_ROUND,
                 BasicStroke.JOIN_BEVEL);
-
-        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(lineWidth));
-        Font largeFont = new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(lineWidth * 1.5f));
-        FontMetrics largeFontMetrics = context.graphics.getFontMetrics(largeFont);
-        context.graphics.setFont(largeFont);
-        context.graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        context.graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         BufferParameters bufParams = new BufferParameters();
         bufParams.setSingleSided(true);
         bufParams.setJoinStyle(BufferParameters.JOIN_BEVEL);
 
-        // Render all edges
         EdgeVisualAttributes evAttrs = new EdgeVisualAttributes();
         for (Edge edge : edgesSet) {
             evAttrs.color = null;
@@ -135,8 +111,8 @@ public class TileRendererImpl implements TileRenderer {
             Geometry edgeGeom = edge.getGeometry();
             boolean hasGeom = true;
             if (edgeGeom == null) {
-                Coordinate[] coordinates = new Coordinate[] { edge.getFromVertex().getCoordinate(),
-                        edge.getToVertex().getCoordinate() };
+                Coordinate[] coordinates = new Coordinate[]{edge.getFromVertex().getCoordinate(),
+                        edge.getToVertex().getCoordinate()};
                 edgeGeom = GeometryUtils.getGeometryFactory().createLineString(coordinates);
                 hasGeom = false;
             }
@@ -176,8 +152,21 @@ public class TileRendererImpl implements TileRenderer {
                 context.graphics.draw(offsetShape);
             }
         }
+    }
 
-        // Render all vertices
+    private void renderVertices() {
+        Font largeFont = new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(lineWidth * 1.5f));
+        FontMetrics largeFontMetrics = context.graphics.getFontMetrics(largeFont);
+
+        context.graphics.setFont(largeFont);
+        context.graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        context.graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        Stroke stroke = new BasicStroke(lineWidth * 1.4f, BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_BEVEL);
+
         VertexVisualAttributes vvAttrs = new VertexVisualAttributes();
         for (Vertex vertex : vertices) {
             vvAttrs.color = null;
@@ -207,5 +196,39 @@ public class TileRendererImpl implements TileRenderer {
                 context.graphics.drawString(vvAttrs.label, (float) x, (float) tilePoint.getY());
             }
         }
+    }
+
+    private void setLineWidth() {
+        lineWidth = (float) (1.0f + 3.0f / Math.sqrt(context.metersPerPixel));
+    }
+
+    private void setMarginsToBbox() {
+        bbox = context.expandPixels(lineWidth * 2.0, lineWidth * 2.0);
+    }
+
+    private void setVertices() {
+        vertices = context.graph.streetIndex.getVerticesForEnvelope(bbox);
+    }
+
+    private void setEdgesSet() {
+        Collection<Edge> edges = context.graph.streetIndex.getEdgesForEnvelope(bbox);
+        edgesSet = new HashSet<>(edges);
+    }
+
+    private void addInComingOutgoingToVertices() {
+        for (Vertex vertex : vertices) {
+            edgesSet.addAll(vertex.getIncoming());
+            edgesSet.addAll(vertex.getOutgoing());
+        }
+    }
+
+    @Override
+    public String getName() {
+        return evRenderer.getName();
+    }
+
+    @Override
+    public int getColorModel() {
+        return BufferedImage.TYPE_INT_ARGB;
     }
 }
