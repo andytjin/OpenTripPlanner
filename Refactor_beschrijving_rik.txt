@@ -1,0 +1,13 @@
+Voor het refactoren van een grote klassen heb ik gekozen om de inspector.TileRendererImpl klassen
+te gaan aanpakken. Daarnaast heb ik de TileRenderer opgesplitst in kleinere klassen met één verantwoordelijkheid.
+
+Bij het refactoren van de TileRenderImpl heb ik mij voornamelijk gefocust op het extracten van methodes en variabelen.
+Ik heb de grootste methode in die klassen RenderTile opgesplits in kleinere methodes. Hierdoor heeft de klassen nu
+meerdere private methoden en zijn er ook een variabelen die in de grote methode werden aangemaakt verplaatst naar klassen variabelen.
+
+Ook heb ik de TileRenderer gerefactord. Dit was één bestand met meerdere klassen en een interface erin. Deze heb ik opgesplitst in aparte bestanden.
+De interface EdgeVertexRenderer die in het TileRenderer bestand stond heb ik hernoemd naar GraphRenderer. Vervolgens heb ik deze klassen in een nieuw package gezet genaamd: tileRenderer. 
+De twee klassen EdgeVisualAttributes en VertelVisualAttributes die ook uit TileRenderer komen staan ook in die package.
+
+
+
